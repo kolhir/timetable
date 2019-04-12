@@ -117,25 +117,9 @@ class ModalForAdd {
     hide() {
       $("#addLesson").modal('hide');
       // this.generateModal()
-      this.save_changes_ajax()
+      timetable.save_changes_ajax()
     }
 
-
-
-    save_changes_ajax() {
-      var json_data = $.toJSON(timetable)
-      $.ajax({
-         url: '/save_changes',
-         method: 'POST',
-         data: json_data,
-         success: function(d) {
-           console.log("успех", d);
-         },
-         error: function(d) {
-           console.log("не успех", d);
-         }
-     });
-    }
     show_error () {
       $('#modal_error').empty()
       $('#modal_error').append(`<div class="alert alert-warning" role="alert">Заполните все поля</div>`)
@@ -194,7 +178,8 @@ function data_from_data(lesson){
 
 $('#modal_save').click( function () {
   if (modal_add.validate()) {
-    current_lesson = timetable["week"][modal_add.week]["days"][modal_add.day]["lessons"][modal_add.number-1]
+    number_v = ("l" +  (modal_add.number))
+    current_lesson = timetable[modal_add.week][modal_add.day][number_v]
     data_from_data(current_lesson)
     modal_add.hide()
     str = current_lesson.fill_lesson()
@@ -203,12 +188,9 @@ $('#modal_save').click( function () {
   }
 });
 
+
+
 class Lesson {
-
-
-  constructor () {
-
-  }
 
   new_data (name, teach, room, type) {
     this.name = name
@@ -223,41 +205,55 @@ class Lesson {
     <div class="d-flex flex-row">  <div class="cell-lesson-room col-6">${this.room}</div>   <div class="cell-lesson-type col-6">${this.type}</div>   </div>`
     return lesson_temp
   }
-
-  
-
-
 }
+
 
 class Day {
   constructor () {
-    this.lessons = [ new Lesson(), new Lesson(), new Lesson(), new Lesson(), new Lesson(), new Lesson() ]
+    this.l1 =  new Lesson()
+    this.l2 =  new Lesson()
+    this.l3 =  new Lesson()
+    this.l4 =  new Lesson()
+    this.l5 =  new Lesson()
+    this.l6 =  new Lesson()
   }
-
 }
+
 
 class Week {
   constructor(){
-    this.days = {
-      mon: new Day(),
-      tues: new Day(),
-      wen: new Day(),
-      thurs: new Day(),
-      fri: new Day(),
-      sat: new Day(),
-    }
-  }
+      this.mon =  new Day()
+      this.tues =  new Day()
+      this.wen =  new Day()
+      this.thurs=  new Day()
+      this.fri =  new Day()
+      this.sat =  new Day()
+  } 
 }
 
 class TimeTable {
   constructor () {
-    this.week = {
-      first: new Week(),
-      second: new Week()
-    }
+    this.first = new Week()
+    this.second = new Week()
   }
 
+  save_changes_ajax() {
+  var json_data = $.toJSON($(this))
+  $.ajax({
+     url: '/save_changes',
+     method: 'POST',
+     data: json_data,
+     success: function(d) {
+       console.log("успех", d);
+     },
+     error: function(d) {
+       console.log("не успех", d);
+     }
+   });
+  }
 }
+
+
 
 // var new_json = json_d.replace("&quot;", "\"")
 
@@ -265,53 +261,82 @@ class TimeTable {
 var timetable = new TimeTable()
 var tt
 console.log(json_d)
-var new_json = json_d.split('&quot;').join('\"');
+var new_json = json_d.split('&#39;').join('\"');
 console.log(new_json)
+
 if (new_json) 
 {
   tt = $.evalJSON(new_json)
 }
-for (let key in tt) {
 
-  weeks = tt[key];
-  weeksTarget = timetable[key];
-  for (let key in weeks) {
-    week = weeks[key];
-    weekTarget = weeksTarget[key]
-    //console.log(week, key);
-    // first second
-    
-    for (let key in week) {
-      days = week[key];
-      daysTarget = weekTarget[key]
-      //console.log(days, key);
-      // days
+for (var key in tt) {
+  week = tt[key]
+  weekTarget = timetable[key]
+  // console.log("weeeeeeeeeeeeeek", week)
+  for (var key2 in week){
 
-      for (let key in days) {
-        day = days[key];
-        dayTarget = daysTarget[key]
-        // all days
+    days = week[key2]
+    dayTarget = weekTarget[key2]
+    // console.log("daaaaaaaays", days)
 
-        for (let key in day) {
-          lessons = day[key]
-          lessonsTarget = dayTarget[key]
+    for (var key3 in days){
+      lesson = days[key3]
+      if (lesson.name != undefined){
+        timetable[key][key2][key3].name = lesson.name
+        timetable[key][key2][key3].teach = lesson.teach
+        timetable[key][key2][key3].room = lesson.room
+        timetable[key][key2][key3].type = lesson.type
+        console.log("leeeessssooon", timetable[key][key2][key3])
+        targetLesson = timetable[key][key2][key3]
+        s = `.${key} .${key2} .${key3}`
 
-          for (let key in lessons) {
-            lesson = lessons[key]
-            lessonTarget = lessonsTarget[key]
-            // lessons num
-            console.log(lesson);
-            for (let key in lesson) {
-              shtuka = lesson[key];
-              lessonTarget[key]=shtuka;
-              console.log(shtuka);
-           }
-          }
+        s2 = targetLesson.fill_lesson()
+        $(s).append(s2)
         }
-      }
+      
+      // console.log("=======", timetable)
     }
-  } 
-}
+  }
+}  
+console.log("=======", timetable)
+// console.log(timetable)
+  // for (let key in weeks) {
+  //   week = weeks[key];
+  //   weekTarget = weeksTarget[key]
+  //   //console.log(week, key);
+  //   // first second
+    
+  //   for (let key in week) {
+  //     days = week[key];
+  //     daysTarget = weekTarget[key]
+  //     //console.log(days, key);
+  //     // days
+
+  //     for (let key in days) {
+  //       day = days[key];
+  //       dayTarget = daysTarget[key]
+  //       // all days
+
+  //       for (let key in day) {
+  //         lessons = day[key]
+  //         lessonsTarget = dayTarget[key]
+
+  //         for (let key in lessons) {
+  //           lesson = lessons[key]
+  //           lessonTarget = lessonsTarget[key]
+  //           // lessons num
+  //           console.log(lesson);
+  //           for (let key in lesson) {
+  //             shtuka = lesson[key];
+  //             lessonTarget[key]=shtuka;
+  //             console.log(shtuka);
+  //          }
+  //         }
+  //       }
+  //     }
+  //   }
+  // } 
 
 
-console.log("=====". tt)
+
+// console.log("=====". tt) 

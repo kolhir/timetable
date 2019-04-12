@@ -55,29 +55,12 @@ def table_view(request):
 @login_required
 @require_http_methods(["POST"])
 def post(request):
-    # print(dir(request.POST))
-    # print(request.POST.keys())
-    user_profile = get_user_profile(request.user)
-    user_profile.tt_json = list(request.POST.keys())[0]
-    user_profile.save()
-    var = list(request.POST.keys())[0]
     from ast import literal_eval
-    var = literal_eval(var)
-    print(var["week"]["second"])
+    var = literal_eval(list(request.POST.keys())[0])
+    json_from_user = var["0"]
+    user_profile = get_user_profile(request.user)
+    user_profile.tt_json = json_from_user
+    user_profile.save()
+    print(json_from_user["second"])
     return HttpResponse(200)
 
-# class TableView(View):
-#     # method_decorator(csrf_protect)
-#     # def get(self, request, *args, **kwargs):
-#     #     c = {}
-#     #     return render(request, "timetable/timediv.html", c)
-#
-#     # @ensure_csrf_cookie
-#     def post(self, request, *args, **kwargs):
-#         # print(dir(request.POST))
-#         # print(request.POST.keys())
-#         var = list(request.POST.keys())[0]
-#         from ast import literal_eval
-#         var = literal_eval(var)
-#         print(var["week"]["second"])
-#         return HttpResponse(200)
