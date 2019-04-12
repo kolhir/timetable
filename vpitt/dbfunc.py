@@ -2,6 +2,8 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from accounts.models import User_profile
 from timetable.models import Faculty, Group_info, Group
+from ast import literal_eval
+
 def get_user(request):
 	try:
 		user=User.objects.get(username = request.user)
@@ -58,3 +60,88 @@ def create_profile(user, group):
 	print(group)
 	user = User_profile(tt_json = "", user = user, group = group)
 	user.save()
+
+
+class Lesson(object): 
+
+	def __init__(self, lesson): 
+		if not(bool(lesson) == False):
+			self.name = lesson["name"]
+			self.teach = lesson["teach"]
+			self.room = lesson["room"]
+			self.type_lesson = lesson["type"] 
+
+	def get_teacher():
+		pass
+	def get_teach():
+		pass
+	def get_room():
+		pass
+	def get_type_lesson():
+		pass
+
+	def __str__(self):
+		try:
+			return("\n         name: " + str(self.name) + 
+				   "\n         teach: " + str(self.teach) + 
+				   "\n         room: " + str(self.room) + 
+				   "\n         type_lesson: " + str(self.type_lesson)
+				  )
+		except AttributeError as e:
+			return("") 
+			
+
+	
+
+class Day(object):
+
+	def __init__(self,day):
+		self.l1 = Lesson(day["l1"])
+		self.l2 = Lesson(day["l2"])
+		self.l3 = Lesson(day["l3"])
+		self.l4 = Lesson(day["l4"])
+		self.l5 = Lesson(day["l5"])
+		self.l6 = Lesson(day["l6"])
+
+	def __str__(self):
+		return("\n      l1"+ str(self.l1) + 
+			   "\n      l2"+ str(self.l2) +
+			   "\n      l3"+ str(self.l3) +
+			   "\n      l4"+ str(self.l4) +
+			   "\n      l5"+ str(self.l5) +
+			   "\n      l6"+ str(self.l6) 
+			   )
+
+
+
+class Week(object):
+
+	def __init__(self, week):
+		self.mon =  Day(week["mon"])
+		self.tues =  Day(week["tues"])
+		self.wen =  Day(week["wen"])
+		self.thurs=  Day(week["thurs"])
+		self.fri =  Day(week["fri"])
+		self.sat =  Day(week["sat"])
+
+	def __str__(self):
+		return("\n   mon"+ str(self.mon) + 
+			   "\n   tues"+ str(self.tues) +
+			   "\n   wen"+ str(self.wen) +
+			   "\n   thurs"+ str(self.thurs) +
+			   "\n   fri"+ str(self.fri) +
+			   "\n   sat"+ str(self.sat) 
+			   )
+
+class TimeTable(object):
+
+	def __init__(self, timetable_dict):
+		self.first = Week(timetable_dict["first"])
+		self.second = Week(timetable_dict["second"])
+	def __str__(self):
+		return("\nfirst"+ str(self.first) + "\nsecond" + str(self.second))
+
+def set_timetable_to_db(user_profile):
+	timetable_dict = literal_eval(user_profile.tt_json)
+	timetable = TimeTable(timetable_dict)
+	print("==========================",timetable)

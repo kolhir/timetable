@@ -1,8 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
 
-
-
 class Faculty(models.Model):
 	name = models.CharField(max_length = 100, null = True)
 	abbr = models.CharField(max_length = 100)
@@ -202,23 +200,23 @@ def subject_fill():
 
 
 print("==========-----------=============--------------=============--------")
-faculty_fill()
-print()
-cathedra_fill()
-print()
-korpus_fill()
-print()
-room_fill()
-print()
-daysweek_fill()
-print()
-typelesson_fill()
-print()
-timelesson_fill()
-print()
-teacher_fill()
-print()
-group_info_fill()
-print()
-subject_fill()
+# faculty_fill()
+# print()
+# cathedra_fill()
+# print()
+# korpus_fill()
+# print()
+# room_fill()
+# print()
+# daysweek_fill()
+# print()
+# typelesson_fill()
+# print()
+# timelesson_fill()
+# print()
+# teacher_fill()
+# print()
+# group_info_fill()
+# print()
+# subject_fill()
 print("==========---------DONE--==DONE=====DONE-------========--------")

@@ -104,7 +104,7 @@ class ModalForAdd {
             $(".week_modal").append(`<strong>${week_c[this.week]}</strong>`)
 
             $(".day_modal").empty()
-            $(".day_modal").append(`<i>${day_c[this.day]}, ${this.number} пара</i>`)
+            $(".day_modal").append(`<i>${day_c[this.day]}, ${parseInt(this.number)} пара</i>`)
 
             $('#modal_error').empty()
     }
@@ -178,7 +178,7 @@ function data_from_data(lesson){
 
 $('#modal_save').click( function () {
   if (modal_add.validate()) {
-    number_v = ("l" +  (modal_add.number))
+    number_v = ("l" +  (parseInt(modal_add.number)))
     current_lesson = timetable[modal_add.week][modal_add.day][number_v]
     data_from_data(current_lesson)
     modal_add.hide()

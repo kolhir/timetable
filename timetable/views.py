@@ -6,7 +6,7 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 from django.utils.decorators import method_decorator
 from django.views.decorators.http import require_http_methods
 from django.contrib.auth.decorators import login_required
-from vpitt.dbfunc import get_user, get_user_profile, get_faculty, get_groups_info, create_profile, create_group
+from vpitt.dbfunc import get_user, get_user_profile, get_faculty, get_groups_info, create_profile, create_group, set_timetable_to_db
 # Create your views here.
 # <QueryDict: {'csrfmiddlewaretoken': ['LG85ijmGsi7TbtEwcNydvh5B7qPsiRYocistWJVffO0vk1Xe93crXhQippVCafAD'], 
 # 'name-faculty': ['1'], 
@@ -64,3 +64,9 @@ def post(request):
     print(json_from_user["second"])
     return HttpResponse(200)
 
+@login_required
+@require_http_methods(["GET"])
+def timetable_done(request):
+    user_profile = get_user_profile(request.user)
+    set_timetable_to_db(user_profile)
+    return render(request, "timetable/timetable_done.html")
