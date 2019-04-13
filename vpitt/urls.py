@@ -19,6 +19,7 @@ from timetable import views as tt_views
 urlpatterns = [
     path('admin/', admin.site.urls),
     
+    path('get_teacher',  tt_views.get_teacher),
     path('timetable/done',  tt_views.timetable_done),
     path('fill_profile/post/',  tt_views.fill_profile_post),
     path('fill_profile/',  tt_views.fill_profile),

@@ -17,7 +17,7 @@ class Group_info(models.Model):
 	specialty = models.CharField(max_length = 100)
 	abbr = models.CharField(max_length = 100)
 	code = models.CharField(max_length = 100)
-	faculty = models.ForeignKey("Faculty", on_delete=models.SET_NULL,  null = True)
+	cathedra = models.ForeignKey("Cathedra", on_delete=models.SET_NULL,  null = True)
 	
 class Group(models.Model):
 	group_info = models.ForeignKey("Group_info", on_delete=models.SET_NULL, null = True)
@@ -165,12 +165,12 @@ def teacher_fill():
 
 def group_info_fill():
 	f = open(s + "group", "r")
-	facultet = Faculty()
+	caf = Cathedra()
 	for line in f:
 		if '@' in line:
 			stri = line[1:].replace("\n", "")
-			facultet = Faculty.objects.filter(abbr = stri)[0]
-			print(facultet)
+			caf = Cathedra.objects.filter(abbr = stri)[0]
+			print(caf)
 			continue
 		l = list(line.split("|"))
 		print(l)
@@ -178,7 +178,7 @@ def group_info_fill():
 			obj = Group_info(specialty = l[0].replace("\n", ""), 
 							 abbr =l[1].replace("\n", ""),
 							 code=l[2].replace("\n", ""), 
-							 faculty = facultet)
+							 cathedra = caf)
 			obj.save()
 
 def subject_fill():

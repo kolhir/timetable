@@ -2,8 +2,9 @@
 var number
 var day
 var week
-var teach_list = {0:"Выберете преподавателя", 1:"Рыбанов А.А", 2:"Короткова Н.Н", 3:"Абрамова О.Ф.", 4:"Саньков С.Г"}
-var lesson_list = {0:"Выберете предмет", 1:"Базы данных", 2:"Исследовние операций", 3:"Компьютерная грамотность", 4:"Операционые системы"}
+var teach_list = {}
+// var teach_list = {0:"Выберете преподавателя", 1:"Рыбанов А.А", 2:"Короткова Н.Н", 3:"Абрамова О.Ф.", 4:"Саньков С.Г"}
+// var lesson_list = {0:"Выберете предмет", 1:"Базы данных", 2:"Исследовние операций", 3:"Компьютерная грамотность", 4:"Операционые системы"}
 var room_list = {0:"Выберете аудиторию", 1:"В-201", 2:"В-202", 3:"В-206", 4:"А-21"}
 var type_list = {0:"Выберете тип занятия", 1:"Лекция", 2:"Практика", 3:"Лаб."}
 var week_c = {"first" : "Первая неделя", "second": "Вторая неделя"}
@@ -15,6 +16,7 @@ var day_c = {mon : "Понедельник",
              sat: "Суббота"
             }
 
+// function gen_tacher_list():
 
 // function getCookie(name) {
 //     var cookieValue = null;
@@ -85,10 +87,10 @@ class ModalForAdd {
         $('#name').append('<option value="' + key + '">' + value + '</option>');
 
       });
-      $.each(teach_list, function(key,  value) {
-        $('#teach').append('<option value="' + key + '">' + value + '</option>');
+      // $.each(teach_list, function(key,  value) {
+      //   $('#teach').append('<option value="' + key + '">' + value + '</option>');
 
-      });
+      // });
       $.each(room_list, function(key,  value) {
         $('#room').append('<option value="' + key + '">' + value + '</option>');
 
@@ -98,8 +100,14 @@ class ModalForAdd {
 
       });
     }
+    fill_teach(teach_list){
+      $('#teach').empty()
+      $.each(teach_list, function(key,  value) {
+        $('#teach').append('<option value="' + key + '">' + value + '</option>');
 
-    fill_info () {
+      });
+    }
+    fill_info (teach_list) {
             $(".week_modal").empty()
             $(".week_modal").append(`<strong>${week_c[this.week]}</strong>`)
 
@@ -166,6 +174,25 @@ $('.cell-lesson').click(function (event) {
     week = $(this).parent().parent().attr("class").match(/\w+|"[^"]+"/g)[0]
     modal_add.newLesson(number, day, week)
     modal_add.show()
+});
+
+$('.name-lesson').change(function(event) {
+  // alert()
+
+  var json_data = {"name":$('.name-lesson option:selected').text()}
+  $.ajax({
+     url: '/get_teacher',
+     method: 'POST',
+     data: json_data,
+     success: function(d) {
+       console.log("успех", d);
+        teach_list = $.evalJSON(d)
+       modal_add.fill_teach(teach_list)
+     },
+     error: function(d) {
+       console.log("не успех", d);
+     }
+   });
 });
 
 function data_from_data(lesson){
@@ -268,6 +295,7 @@ if (new_json)
 {
   tt = $.evalJSON(new_json)
 }
+// var lesson_list = $.evalJSON(new_stroka)
 
 for (var key in tt) {
   week = tt[key]

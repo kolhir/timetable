@@ -1,7 +1,7 @@
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from accounts.models import User_profile
-from timetable.models import Faculty, Group_info, Group
+from timetable.models import Faculty, Group_info, Group, Teacher, Lessons
 from ast import literal_eval
 
 def get_user(request):
@@ -35,6 +35,32 @@ def get_faculty():
 def get_groups_info():
 	try:
 		q = Group_info.objects.filter()
+		return(q)
+	except ObjectDoesNotExist:
+		return(False)
+	except  MultipleObjectsReturned:
+		return(False)
+
+def get_lessons():
+	try:
+		q = Lessons.objects.filter()
+		return(q)
+	except ObjectDoesNotExist:
+		return(False)
+	except  MultipleObjectsReturned:
+		return(False)
+def get_lesson_by_name(name):
+	try:
+		q = Lessons.objects.filter(name = name).get()
+		return(q)
+	except ObjectDoesNotExist:
+		return(False)
+	except  MultipleObjectsReturned:
+		return(False)
+
+def get_teacher_by_caf(cathedra):
+	try:
+		q = Teacher.objects.filter(cathedra = cathedra)
 		return(q)
 	except ObjectDoesNotExist:
 		return(False)

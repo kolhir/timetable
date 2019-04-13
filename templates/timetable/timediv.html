@@ -11,6 +11,9 @@
 {% endif %}
  -->
 <div class="page-content--bgf7">
+<div class="row">
+  Группа: ВИП-308
+</div>
   <section class = "timetable-section">
 <div class = "container-fluid" >
 
@@ -205,7 +208,7 @@
             <form>
               <div class="form-group">
                 <label for="name-lesson">Название предмета</label>
-                <select id = "name" class="form-control" name="name-lesson">
+                <select id = "name" class="name-lesson form-control" name="name-lesson">
 
                 </select>
               </div>
@@ -245,8 +248,11 @@
     	</div>
   	</div>
 </div>
-
 <script type="text/javascript">
   var json_d = "{{tt_json}}"
+  var lesson_list = {{ lessons|safe }}
+
+
+
 </script>
 {% endblock %}
