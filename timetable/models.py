@@ -17,11 +17,12 @@ class Group_info(models.Model):
 	specialty = models.CharField(max_length = 100)
 	abbr = models.CharField(max_length = 100)
 	code = models.CharField(max_length = 100)
+	course = models.IntegerField(default = 0)
+	semester = models.IntegerField(default = 0)
 	cathedra = models.ForeignKey("Cathedra", on_delete=models.SET_NULL,  null = True)
 	
 class Group(models.Model):
 	group_info = models.ForeignKey("Group_info", on_delete=models.SET_NULL, null = True)
-	curs = models.IntegerField()
 	subgroup = models.IntegerField()
 
 class DaysWeek(models.Model):
@@ -39,11 +40,14 @@ class Room(models.Model):
 class Lessons(models.Model):
     name = models.CharField(max_length = 100)
     short_name = models.CharField(max_length = 100)
-    course = models.IntegerField()
     cathedra = models.ForeignKey("Cathedra", on_delete=models.SET_NULL,  null = True)
 
 class TypeLesson(models.Model):
     name = models.CharField(max_length = 50)
+
+class Lessons_for_group(models.Model):
+	group_info = models.ForeignKey("Group_info", on_delete=models.SET_NULL,  null = True)
+	lesson = models.ForeignKey("Lessons", on_delete=models.SET_NULL,  null = True)
 
 class Teacher(models.Model):
     first_name = models.CharField(max_length = 100, null = True)
@@ -175,11 +179,15 @@ def group_info_fill():
 		l = list(line.split("|"))
 		print(l)
 		if len(Group_info.objects.filter(code = l[2].replace("\n", ""))) == 0:
-			obj = Group_info(specialty = l[0].replace("\n", ""), 
-							 abbr =l[1].replace("\n", ""),
-							 code=l[2].replace("\n", ""), 
-							 cathedra = caf)
-			obj.save()
+			for course in range(1,5):
+				for semester in range(1,3):
+					obj = Group_info(specialty = l[0].replace("\n", ""), 
+									 abbr =l[1].replace("\n", ""),
+									 code=l[2].replace("\n", ""), 
+									 course = course,
+									 semester = semester,
+									 cathedra = caf)
+					obj.save()
 
 def subject_fill():
 	f = open(s + "subject", "r")
@@ -192,8 +200,7 @@ def subject_fill():
 		if len(Lessons.objects.filter(name = l[0].replace("\n", ""))) == 0:
 			obj = Lessons(name = l[0].replace("\n", ""),
 						  short_name  = l[1].replace("\n", ""),
-						  cathedra = caf,
-						  course = l[3].replace("\n", "")
+						  cathedra = caf
 					    )
 			obj.save()
 
@@ -220,3 +227,43 @@ print("==========-----------=============--------------=============--------")
 # print()
 # subject_fill()
 print("==========---------DONE--==DONE=====DONE-------========--------")
+
+number_arr = ["первый", "второй", "третий", "четвертый","пятый", "шестой", "седьмой", "восьмой"]
+name = "data/dekan_data/{}.csv"
+namelist = [
+"ввт",
+"вип",
+"вхт",
+"вэ",
+"вэм"
+]
+# group = Group_info()
+# lessons = Lessons()
+f_dict = {}
+kurs = int()
+group_abbr = str()
+sem = int()
+for n in namelist:
+	file = open(name.format(n), 'r')
+
+	for line in file:
+		line = line.replace("\n","")
+		elem = line.split(";")
+		if elem[0].lower() == "курс":
+			ku = elem[1] 
+			l = elem[2].split(" ")
+			gr = l[len(l)-1].split("-")[0]
+			print(ku, gr)
+		if line.lower() in number_arr:
+			sem = number_arr.index(line.lower())+1
+			print(sem)
+		print
+		if elem[1].isdigit():
+			print(elem[3])
+			print()
+			caf = Cathedra.objects.filter(abbr = elem[3]).get()
+			lesson = Lesson(name = elem[2], cathedra = caf)
+			lessno.save()
+
+			# group_info = get_group_info(elem[])
+			

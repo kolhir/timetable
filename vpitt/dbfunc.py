@@ -26,7 +26,7 @@ def get_groups_name(user):
 	group = get_user_profile(user.username).group
 	name = str(group.group_info.abbr) + "-" + str(group.curs) + str(group.group_info.code)
 	return name
-	
+
 def get_faculty():
 	try:
 		q = Faculty.objects.filter()
@@ -132,14 +132,30 @@ class Lesson(object):
 			self.room = lesson["room"]
 			self.type_lesson = lesson["type"] 
 
-	def get_teacher():
-		pass
-	def get_teach():
-		pass
-	def get_room():
-		pass
-	def get_type_lesson():
-		pass
+	# def check_lesson(self):
+	# 	if get_lesson_by_name(self.name):
+	# 		return True
+	# 	else return False
+
+	# def check_teach(self):
+	# 	if get_teach_by_name(self.name):
+	# 		return True
+	# 	else return False
+
+	# def check_korpus(self):
+	# 	if get_korpus_by_name(self.name):
+	# 		return True
+	# 	else return False
+
+	# def check_room(self):
+	# 	if get_room_by_name(self.name):
+	# 		return True
+	# 	else return False
+
+	# def check_type_lesson(self):
+	# 	if get_type_lesson_by_name(self.name):
+	# 		return True
+	# 	else return False
 
 	def __str__(self):
 		try:
@@ -194,15 +210,27 @@ class Week(object):
 			   "\n   sat"+ str(self.sat) 
 			   )
 
-class TimeTable(object):
+class TimeTableFormJson(object):
 
 	def __init__(self, timetable_dict):
 		self.first = Week(timetable_dict["first"])
 		self.second = Week(timetable_dict["second"])
+
 	def __str__(self):
 		return("\nfirst"+ str(self.first) + "\nsecond" + str(self.second))
 
 def set_timetable_to_db(user_profile):
 	timetable_dict = literal_eval(user_profile.tt_json)
-	timetable = TimeTable(timetable_dict)
+	timetable = TimeTableFormJson(timetable_dict)
 	print("==========================",timetable)
+
+
+
+  #   group = models.ForeignKey("Group", on_delete=models.SET_NULL,  null = True)
+  #   day = models.ForeignKey("DaysWeek", on_delete=models.SET_NULL,  null = True)
+  #   number_week = models.IntegerField()
+  #   lesson_time = models.ForeignKey("LessonTime", on_delete=models.SET_NULL,  null = True)
+  #   lesson = models.ForeignKey("Lessons", on_delete=models.SET_NULL,  null = True)
+  #   teacher = models.ForeignKey("Teacher", on_delete=models.SET_NULL,  null = True)
+  #   room = models.ForeignKey("Room", on_delete=models.SET_NULL,  null = True)
+  #   type_lessons = models.ForeignKey("TypeLesson", on_delete=models.SET_NULL,  null = True)
