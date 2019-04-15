@@ -11,10 +11,10 @@
 {% endif %}
  -->
 <div class="page-content--bgf7">
-<div class="row">
-  Группа: ВИП-308
+<div class = "container" >
+<h4> Группа: {{group_name}}</h4>
 </div>
-  <section class = "timetable-section">
+<section class = "timetable-section">
 <div class = "container-fluid" >
 
   <div class="flextable d-flex flex-row m-2 ">
@@ -219,7 +219,13 @@
                 </select>
               </div>
               <div class="row">
-                <div class="col-6 form-group">
+                <div class="col-3 form-group">
+                  <label for="korpus-lesson">Корпус</label>
+                  <select id = "korpus" class="form-control" name="korpus-lesson">
+
+                  </select>
+                </div>
+                <div class="col-3 form-group">
                   <label for="room-lesson">Кабинет</label>
                   <select id = "room" class="form-control" name="room-lesson">
 
@@ -251,7 +257,7 @@
 <script type="text/javascript">
   var json_d = "{{tt_json}}"
   var lesson_list = {{ lessons|safe }}
-
+  var korpus_list = {{ korpus|safe }}
 
 
 </script>

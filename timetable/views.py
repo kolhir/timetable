@@ -10,7 +10,9 @@ from vpitt.dbfunc import get_user, get_user_profile, \
                         get_faculty, get_groups_info, \
                         create_profile, create_group, \
                         set_timetable_to_db, get_lessons, \
-                        get_lesson_by_name, get_teacher_by_caf
+                        get_lesson_by_name, get_teacher_by_caf, \
+                        get_korpus_by_name, get_rooms_by_korpus, \
+                        get_korpus, get_groups_name
 import json
 from ast import literal_eval
 # Create your views here.
@@ -49,21 +51,30 @@ def fill_profile_post(request):
 @login_required
 @require_http_methods(["GET"])
 def table_view(request):
+    method_decorator(csrf_protect)
     user_profile = get_user_profile(request.user)
     if not(user_profile):
         return redirect("/fill_profile")
-    print(user_profile.group.group_info.cathedra)
+
     lessons = get_lessons()
     lesson_list = {0:"Выберете предмет"}
-
     for item in enumerate(lessons):
         lesson_list[item[0]+1] = item[1].name
     lesson_list = json.dumps(lesson_list, ensure_ascii=False)
 
-    method_decorator(csrf_protect)
-    context = {"tt_json": "", "lessons": lesson_list}
+    korpus = get_korpus()
+    korpus_list = {0:""}
+    for item in enumerate(korpus):
+        korpus_list[item[0]+1] = item[1].letter
+    korpus_list = json.dumps(korpus_list, ensure_ascii=False)
+
+    group_name = get_groups_name(request.user)
+
+    context = {"tt_json": "", "lessons": lesson_list, "korpus": korpus_list, "group_name" : group_name}
+    
     if user_profile.tt_json:
         context["tt_json"] = user_profile.tt_json
+
     return render(request, "timetable/timediv.html", context)
 
 
@@ -101,3 +112,19 @@ def get_teacher(request):
     # json_from_user = var    
     print("=====================", lesson.cathedra)
     return HttpResponse(teachers_dict)
+
+@login_required
+@require_http_methods(["POST"])
+def get_room(request):
+    name = request.POST["name"]
+    print("=",name,"=")
+    korpus = get_korpus_by_name(name)
+    print(korpus)
+    rooms = get_rooms_by_korpus(korpus)
+    print(rooms)
+    rooms_dict = {0:""}
+    for item in enumerate(rooms):
+        s = (item[1].number)
+        rooms_dict[item[0]+1] = s
+    rooms_dict = json.dumps(rooms_dict, ensure_ascii=False)
+    return HttpResponse(rooms_dict)

@@ -1,7 +1,7 @@
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from accounts.models import User_profile
-from timetable.models import Faculty, Group_info, Group, Teacher, Lessons
+from timetable.models import Faculty, Group_info, Group, Teacher, Lessons, Room, Korpus
 from ast import literal_eval
 
 def get_user(request):
@@ -22,6 +22,11 @@ def get_user_profile(username):
 	except  MultipleObjectsReturned:
 		return(False)
 
+def get_groups_name(user):
+	group = get_user_profile(user.username).group
+	name = str(group.group_info.abbr) + "-" + str(group.curs) + str(group.group_info.code)
+	return name
+	
 def get_faculty():
 	try:
 		q = Faculty.objects.filter()
@@ -49,9 +54,29 @@ def get_lessons():
 		return(False)
 	except  MultipleObjectsReturned:
 		return(False)
+
 def get_lesson_by_name(name):
 	try:
 		q = Lessons.objects.filter(name = name).get()
+		return(q)
+	except ObjectDoesNotExist:
+		return(False)
+	except  MultipleObjectsReturned:
+		return(False)
+
+
+def get_korpus_by_name(name):
+	try:
+		q = Korpus.objects.filter(letter = name).get()
+		return(q)
+	except ObjectDoesNotExist:
+		return(False)
+	except  MultipleObjectsReturned:
+		return(False)
+
+def get_rooms_by_korpus(korpus):
+	try:
+		q = Room.objects.filter(korpus = korpus)
 		return(q)
 	except ObjectDoesNotExist:
 		return(False)
@@ -76,6 +101,15 @@ def get_group_info(id):
 	except  MultipleObjectsReturned:
 		return(False)
 
+def get_korpus():
+	try:
+		q = Korpus.objects.filter()
+		return(q)
+	except ObjectDoesNotExist:
+		return(False)
+	except  MultipleObjectsReturned:
+		return(False)
+
 def create_group(kurs, id, subg):
 	info = get_group_info(id)
 	group = Group(curs = kurs, group_info = info, subgroup = subg) 
@@ -94,6 +128,7 @@ class Lesson(object):
 		if not(bool(lesson) == False):
 			self.name = lesson["name"]
 			self.teach = lesson["teach"]
+			self.korpus = lesson["korpus"]
 			self.room = lesson["room"]
 			self.type_lesson = lesson["type"] 
 
@@ -110,7 +145,7 @@ class Lesson(object):
 		try:
 			return("\n         name: " + str(self.name) + 
 				   "\n         teach: " + str(self.teach) + 
-				   "\n         room: " + str(self.room) + 
+				   "\n         room: " + str(self.korpus) + "-"+ str(self.room) + 
 				   "\n         type_lesson: " + str(self.type_lesson)
 				  )
 		except AttributeError as e:

@@ -6,6 +6,7 @@ var teach_list = {}
 // var teach_list = {0:"Выберете преподавателя", 1:"Рыбанов А.А", 2:"Короткова Н.Н", 3:"Абрамова О.Ф.", 4:"Саньков С.Г"}
 // var lesson_list = {0:"Выберете предмет", 1:"Базы данных", 2:"Исследовние операций", 3:"Компьютерная грамотность", 4:"Операционые системы"}
 var room_list = {0:"Выберете аудиторию", 1:"В-201", 2:"В-202", 3:"В-206", 4:"А-21"}
+// var korpus_list = {0:"", 1:"А", 2:"В", 3:"Б"}
 var type_list = {0:"Выберете тип занятия", 1:"Лекция", 2:"Практика", 3:"Лаб."}
 var week_c = {"first" : "Первая неделя", "second": "Вторая неделя"}
 var day_c = {mon : "Понедельник",
@@ -80,6 +81,7 @@ class ModalForAdd {
   generateModal()  {
       $('#name').empty()
       $('#teach').empty()
+      $('#korpus').empty()
       $('#room').empty()
       $('#type').empty()
 
@@ -87,19 +89,27 @@ class ModalForAdd {
         $('#name').append('<option value="' + key + '">' + value + '</option>');
 
       });
+
       // $.each(teach_list, function(key,  value) {
       //   $('#teach').append('<option value="' + key + '">' + value + '</option>');
 
       // });
-      $.each(room_list, function(key,  value) {
-        $('#room').append('<option value="' + key + '">' + value + '</option>');
+
+      $.each(korpus_list, function(key,  value) {
+        $('#korpus').append('<option value="' + key + '">' + value + '</option>');
 
       });
+
+      // $.each(room_list, function(key,  value) {
+      //   $('#room').append('<option value="' + key + '">' + value + '</option>');
+
+      // });
       $.each(type_list, function(key,  value) {
         $('#type').append('<option value="' + key + '">' + value + '</option>');
 
       });
     }
+
     fill_teach(teach_list){
       $('#teach').empty()
       $.each(teach_list, function(key,  value) {
@@ -107,6 +117,15 @@ class ModalForAdd {
 
       });
     }
+
+    fill_room(room_list){
+      $('#room').empty()
+      $.each(room_list, function(key,  value) {
+        $('#room').append('<option value="' + key + '">' + value + '</option>');
+
+      });
+    }
+
     fill_info (teach_list) {
             $(".week_modal").empty()
             $(".week_modal").append(`<strong>${week_c[this.week]}</strong>`)
@@ -186,7 +205,7 @@ $('.name-lesson').change(function(event) {
      data: json_data,
      success: function(d) {
        console.log("успех", d);
-        teach_list = $.evalJSON(d)
+       teach_list = $.evalJSON(d)
        modal_add.fill_teach(teach_list)
      },
      error: function(d) {
@@ -195,12 +214,33 @@ $('.name-lesson').change(function(event) {
    });
 });
 
+
+$('#korpus').change(function(event) {
+  var json_data = {"name":$('#korpus option:selected').text()}
+  $.ajax({
+     url: '/get_room',
+     method: 'POST',
+     data: json_data,
+     success: function(d) {
+        console.log("успех", d);
+        room_list = $.evalJSON(d)
+        modal_add.fill_room(room_list)
+     },
+     error: function(d) {
+       console.log("не успех", d);
+     }
+   });
+});
+
+
+
 function data_from_data(lesson){
   teach = teach_list[data["teach-lesson"]]
   name = lesson_list[data["name-lesson"]]
+  korpus = korpus_list[data["korpus-lesson"]]
   room = room_list[data["room-lesson"]]
   type = type_list[data["type-lesson"]]
-  lesson.new_data(name, teach, room, type)
+  lesson.new_data(name, teach, korpus, room, type)
 }
 
 $('#modal_save').click( function () {
@@ -219,9 +259,10 @@ $('#modal_save').click( function () {
 
 class Lesson {
 
-  new_data (name, teach, room, type) {
+  new_data (name, teach, korpus, room, type) {
     this.name = name
     this.teach = teach
+    this.korpus = korpus
     this.room = room
     this.type = type
   }
@@ -229,7 +270,7 @@ class Lesson {
   fill_lesson (element) {
     const lesson_temp = `<div class="cell-style cell-lesson-name">${this.name}</div>
     <div class="cell-style cell-lesson-teach">${this.teach}</div>
-    <div class="d-flex flex-row">  <div class="cell-lesson-room col-6">${this.room}</div>   <div class="cell-lesson-type col-6">${this.type}</div>   </div>`
+    <div class="d-flex flex-row">  <div class="cell-lesson-room col-6">${this.korpus}-${this.room}</div>   <div class="cell-lesson-type col-6">${this.type}</div>   </div>`
     return lesson_temp
   }
 }
@@ -312,6 +353,7 @@ for (var key in tt) {
       if (lesson.name != undefined){
         timetable[key][key2][key3].name = lesson.name
         timetable[key][key2][key3].teach = lesson.teach
+        timetable[key][key2][key3].korpus = lesson.korpus
         timetable[key][key2][key3].room = lesson.room
         timetable[key][key2][key3].type = lesson.type
         console.log("leeeessssooon", timetable[key][key2][key3])
@@ -327,44 +369,3 @@ for (var key in tt) {
   }
 }  
 console.log("=======", timetable)
-// console.log(timetable)
-  // for (let key in weeks) {
-  //   week = weeks[key];
-  //   weekTarget = weeksTarget[key]
-  //   //console.log(week, key);
-  //   // first second
-    
-  //   for (let key in week) {
-  //     days = week[key];
-  //     daysTarget = weekTarget[key]
-  //     //console.log(days, key);
-  //     // days
-
-  //     for (let key in days) {
-  //       day = days[key];
-  //       dayTarget = daysTarget[key]
-  //       // all days
-
-  //       for (let key in day) {
-  //         lessons = day[key]
-  //         lessonsTarget = dayTarget[key]
-
-  //         for (let key in lessons) {
-  //           lesson = lessons[key]
-  //           lessonTarget = lessonsTarget[key]
-  //           // lessons num
-  //           console.log(lesson);
-  //           for (let key in lesson) {
-  //             shtuka = lesson[key];
-  //             lessonTarget[key]=shtuka;
-  //             console.log(shtuka);
-  //          }
-  //         }
-  //       }
-  //     }
-  //   }
-  // } 
-
-
-
-// console.log("=====". tt) 
