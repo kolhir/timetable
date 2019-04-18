@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<!-- <div class="page-content--bgf7"> -->
+  <section class = "timetable-section">
+	<div class="row m-3 p-3">
+		<div class="col-4"></div>
+		<div class="col-4">
+			{% if schedules %}
+			  
+				<table class = "table">
+					<thead>
+						<th>Название</th>
+						<th>Семестр</th>
+						<th>Подгурппа</th>
+						<th></th>
+					</thead>
+					<tbody>
+						 {% for group in schedules %}
+						<tr>
+							<td>{{group.group_info.abbr}}-{{group.group_info.course}}{{group.group_info.code}}</td>
+							<td>{{group.group_info.semester}}</td>
+							<td>{{group.subgroup}}</td>
+							<td><a href="/edit-schedule/{{group.id}}">Редактировать</a></td>
+						</tr>
+						{% endfor %}
+					</tbody>
+
+				</table>
+				
+			{% else %}
+			    У вас еще нет расписаний.
+			{% endif %}
+			<a href="/add-new-schedules">Добавить новое</a>
+		</div>
+		<div class="col-4"></div>
+	</div>
+	
+	
+
+
+  </section>
+</div>
+{% endblock %}
