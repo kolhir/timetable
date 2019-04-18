@@ -1,8 +1,33 @@
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
-from accounts.models import User_profile
-from timetable.models import Faculty, Group_info, Group, Teacher, Lessons, Room, Korpus
+# from accounts.models import User_profile
+from timetable.models import Faculty, Group_info, TypeLesson ,Group, Teacher, Lessons, Room, Korpus, Lessons_for_group, Time_table, DaysWeek, LessonTime
 from ast import literal_eval
+import copy
+#############################
+from termcolor import cprint
+def print_message(message):
+	cprint(("!!!!! " + str(message) + " !!!!!"), 'red',attrs=['bold'])
+#############################
+
+def get_group_by_id(id):
+	try:
+		group = Group.objects.filter(id = id).get()
+		return(group)
+	except ObjectDoesNotExist:
+		return(False)
+	except  MultipleObjectsReturned:
+		return(False)
+
+def get_users_schedules(user):
+	try:
+		groups = Group.objects.filter(user_create = user)
+		return(groups)
+	except ObjectDoesNotExist:
+		return(False)
+	except  MultipleObjectsReturned:
+		return(False)
+
 
 def get_user(request):
 	try:
@@ -37,24 +62,27 @@ def get_faculty():
 		return(False)
 
 
-def get_groups_info():
+def get_list_groups_info():
 	try:
-		q = Group_info.objects.filter()
+		q = Group_info.objects.filter(course = 1, semester = 1)
 		return(q)
 	except ObjectDoesNotExist:
 		return(False)
 	except  MultipleObjectsReturned:
 		return(False)
 
-def get_lessons():
+def get_lessons(group):
 	try:
-		q = Lessons.objects.filter()
+		q = Lessons_for_group.objects.filter(group_info = group.group_info)
+
 		return(q)
 	except ObjectDoesNotExist:
 		return(False)
 	except  MultipleObjectsReturned:
 		return(False)
 
+
+#################################
 def get_lesson_by_name(name):
 	try:
 		q = Lessons.objects.filter(name = name).get()
@@ -74,6 +102,35 @@ def get_korpus_by_name(name):
 	except  MultipleObjectsReturned:
 		return(False)
 
+def get_teacher_by_name(name):
+	try:
+		q = Teacher.objects.filter(last_name = name).get()
+		return(q)
+	except ObjectDoesNotExist:
+		return(False)
+	except  MultipleObjectsReturned:
+		return(False)
+
+def get_room_by_name(name, korpus):
+	try:
+		q = Room.objects.filter(number = name, korpus = korpus ).get()
+		return(q)
+	except ObjectDoesNotExist:
+		return(False)
+	except  MultipleObjectsReturned:
+		return(False)
+
+def get_type_by_name(name):
+	try:
+		q = TypeLesson.objects.filter(name = name).get()
+		return(q)
+	except ObjectDoesNotExist:
+		return(False)
+	except  MultipleObjectsReturned:
+		return(False)
+#################################
+
+
 def get_rooms_by_korpus(korpus):
 	try:
 		q = Room.objects.filter(korpus = korpus)
@@ -92,9 +149,9 @@ def get_teacher_by_caf(cathedra):
 	except  MultipleObjectsReturned:
 		return(False)
 
-def get_group_info(id):
+def get_group_info(abbr, course, semester):
 	try:
-		q = Group_info.objects.filter(id  = id).get()
+		q = Group_info.objects.filter(abbr = abbr, course = course, semester = semester).get()
 		return(q)
 	except ObjectDoesNotExist:
 		return(False)
@@ -110,10 +167,14 @@ def get_korpus():
 	except  MultipleObjectsReturned:
 		return(False)
 
-def create_group(kurs, id, subg):
-	info = get_group_info(id)
-	group = Group(curs = kurs, group_info = info, subgroup = subg) 
-	group.save() 
+def create_group(abbr, course, sem ,subg, user):
+	info = get_group_info(abbr, course, sem)
+	print("!!!!!!!!!!!!!!", info)
+	group = False
+	if ((int(subg) in (1,2,0)) and info):
+
+		group = Group( group_info = info, subgroup = subg, user_create = user) 
+		group.save() 
 	return group
 
 def create_profile(user, group):
@@ -122,15 +183,49 @@ def create_profile(user, group):
 	user.save()
 
 
+
+
+day_c = {"mon" : "Понедельник",
+             "tues": "Вторник",
+             "wen": "Среда",
+             "thurs": "Четверг",
+             "fri": "Пятница",
+             "sat": "Суббота"
+            }
+            
+def get_day_by_name(name):
+	try:
+		q = DaysWeek.objects.filter(name = day_c[name]).get()
+		return(q)
+	except ObjectDoesNotExist:
+		return(False)
+	except  MultipleObjectsReturned:
+		return(False)
+
+def get_lesson_time_by_name(n):
+	try:
+		q = LessonTime.objects.filter(number_lesson = n).get()
+		return(q)
+	except ObjectDoesNotExist:
+		return(False)
+	except  MultipleObjectsReturned:
+		return(False)
+
 class Lesson(object): 
 
-	def __init__(self, lesson): 
+	def __init__(self, lesson, schedule): 
 		if not(bool(lesson) == False):
 			self.name = lesson["name"]
+			schedule.lesson = get_lesson_by_name(lesson["name"])
 			self.teach = lesson["teach"]
+			schedule.teacher = get_teacher_by_name(list(lesson["teach"].split(" "))[0])
 			self.korpus = lesson["korpus"]
+			schedule.korpus = get_korpus_by_name(lesson["korpus"])
 			self.room = lesson["room"]
-			self.type_lesson = lesson["type"] 
+			schedule.room = get_room_by_name(lesson["room"], schedule.korpus)
+			self.type_lessons = lesson["type"] 
+			schedule.type_lessons = get_type_by_name(lesson["type"]) 
+			schedule.save()
 
 	# def check_lesson(self):
 	# 	if get_lesson_by_name(self.name):
@@ -168,17 +263,32 @@ class Lesson(object):
 			return("") 
 			
 
-	
+
 
 class Day(object):
 
-	def __init__(self,day):
-		self.l1 = Lesson(day["l1"])
-		self.l2 = Lesson(day["l2"])
-		self.l3 = Lesson(day["l3"])
-		self.l4 = Lesson(day["l4"])
-		self.l5 = Lesson(day["l5"])
-		self.l6 = Lesson(day["l6"])
+	def __init__(self,day, schedule):
+	
+		tt_1 = copy.deepcopy(schedule)
+		tt_1.lesson_time = get_lesson_time_by_name(1)
+		tt_2 = copy.deepcopy(schedule)
+		tt_2.lesson_time = get_lesson_time_by_name(2)
+		tt_3 = copy.deepcopy(schedule)
+		tt_3.lesson_time = get_lesson_time_by_name(3)
+		tt_4 = copy.deepcopy(schedule)
+		tt_4.lesson_time = get_lesson_time_by_name(4)
+		tt_5 = copy.deepcopy(schedule)
+		tt_5.lesson_time = get_lesson_time_by_name(5)
+		tt_6 = copy.deepcopy(schedule)
+		tt_6.lesson_time = get_lesson_time_by_name(6)
+
+
+		self.l1 = Lesson(day["l1"], tt_1)
+		self.l2 = Lesson(day["l2"], tt_2)
+		self.l3 = Lesson(day["l3"], tt_3)
+		self.l4 = Lesson(day["l4"], tt_4)
+		self.l5 = Lesson(day["l5"], tt_5)
+		self.l6 = Lesson(day["l6"], tt_6)
 
 	def __str__(self):
 		return("\n      l1"+ str(self.l1) + 
@@ -193,13 +303,28 @@ class Day(object):
 
 class Week(object):
 
-	def __init__(self, week):
-		self.mon =  Day(week["mon"])
-		self.tues =  Day(week["tues"])
-		self.wen =  Day(week["wen"])
-		self.thurs=  Day(week["thurs"])
-		self.fri =  Day(week["fri"])
-		self.sat =  Day(week["sat"])
+	def __init__(self, week, schedule):
+		tt_mon = copy.deepcopy(schedule)
+		tt_mon.day = get_day_by_name("mon")
+
+		tt_tues = copy.deepcopy(schedule)
+		tt_tues.day = get_day_by_name("tues")
+		tt_wen = copy.deepcopy(schedule)
+		tt_wen.day = get_day_by_name("wen")
+		tt_thurs = copy.deepcopy(schedule)
+		tt_thurs.day = get_day_by_name("thurs")
+		tt_fri = copy.deepcopy(schedule)
+		tt_fri.day = get_day_by_name("fri")
+		tt_sat = copy.deepcopy(schedule)
+		tt_sat.day = get_day_by_name("sat")
+
+
+		self.mon =  Day(week["mon"],tt_mon)
+		self.tues =  Day(week["tues"],tt_tues)
+		self.wen =  Day(week["wen"],tt_wen)
+		self.thurs=  Day(week["thurs"],tt_thurs)
+		self.fri =  Day(week["fri"],tt_fri)
+		self.sat =  Day(week["sat"],tt_sat)
 
 	def __str__(self):
 		return("\n   mon"+ str(self.mon) + 
@@ -212,16 +337,24 @@ class Week(object):
 
 class TimeTableFormJson(object):
 
-	def __init__(self, timetable_dict):
-		self.first = Week(timetable_dict["first"])
-		self.second = Week(timetable_dict["second"])
+	def __init__(self, timetable_dict, group, schedule):
+		self.group = group
+		schedule.group = group
+		v1 =  copy.deepcopy(schedule)
+		v1.number_week = 1
+		v2 =  copy.deepcopy(schedule)
+		v2.number_week = 2
+		self.first = Week(timetable_dict["first"], v1)
+		self.second = Week(timetable_dict["second"], v2)
 
 	def __str__(self):
 		return("\nfirst"+ str(self.first) + "\nsecond" + str(self.second))
 
-def set_timetable_to_db(user_profile):
-	timetable_dict = literal_eval(user_profile.tt_json)
-	timetable = TimeTableFormJson(timetable_dict)
+def set_timetable_to_db(id):
+	group = get_group_by_id(id)
+	timetable_dict = literal_eval(group.tt_json)
+	schedule = Time_table()
+	timetable = TimeTableFormJson(timetable_dict, group, schedule)
 	print("==========================",timetable)
 
 

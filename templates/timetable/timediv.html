@@ -11,9 +11,21 @@
 {% endif %}
  -->
 <div class="page-content--bgf7">
-<div class = "container" >
-<h4> Группа: {{group_name}}</h4>
+<div class="col-7">
+  
 </div>
+<div class="col-3">
+   <table class="table">
+    <thead>
+      <tr>
+              <th>Группа: {{group.group_info.abbr}}-{{group.group_info.course}}{{group.group_info.code}}</th>
+              <th>Семестр: {{group.group_info.semester}}</th>
+              <th>Подгруппа: {{group.subgroup}}</th>
+      </tr>
+  </thead>
+  </table>
+</div>
+ 
 <section class = "timetable-section">
 <div class = "container-fluid" >
 
@@ -183,7 +195,7 @@
     </div>
   </div>
   <div class="m-3">
-    <a href="/timetable/done" type="button" class="btn btn-warning">Расписание готово, отрпавить</a>
+    <a href="/timetable/done/{{group.id}}" type="button" class="btn btn-warning">Расписание готово, отрпавить</a>
     </div>
 </div>
 </section>
@@ -258,7 +270,7 @@
   var json_d = "{{tt_json}}"
   var lesson_list = {{ lessons|safe }}
   var korpus_list = {{ korpus|safe }}
-
+  var group_id = {{group.id}}
 
 </script>
 {% endblock %}

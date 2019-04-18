@@ -300,9 +300,10 @@ class Week {
 }
 
 class TimeTable {
-  constructor () {
+  constructor (id) {
     this.first = new Week()
     this.second = new Week()
+    this.id = id
   }
 
   save_changes_ajax() {
@@ -326,7 +327,7 @@ class TimeTable {
 // var new_json = json_d.replace("&quot;", "\"")
 
 
-var timetable = new TimeTable()
+var timetable = new TimeTable(group_id)
 var tt
 console.log(json_d)
 var new_json = json_d.split('&#39;').join('\"');

@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+# from accounts.models import User_profile
 
 class Faculty(models.Model):
 	name = models.CharField(max_length = 100, null = True)
@@ -24,6 +25,8 @@ class Group_info(models.Model):
 class Group(models.Model):
 	group_info = models.ForeignKey("Group_info", on_delete=models.SET_NULL, null = True)
 	subgroup = models.IntegerField()
+	user_create = models.ForeignKey(User, on_delete=models.SET_NULL, null = True)
+	tt_json = models.TextField(default = "")
 
 class DaysWeek(models.Model):
     name = models.CharField(max_length = 20)
@@ -62,6 +65,7 @@ class Time_table(models.Model):
     lesson_time = models.ForeignKey("LessonTime", on_delete=models.SET_NULL,  null = True)
     lesson = models.ForeignKey("Lessons", on_delete=models.SET_NULL,  null = True)
     teacher = models.ForeignKey("Teacher", on_delete=models.SET_NULL,  null = True)
+    korpus = models.ForeignKey("Korpus", on_delete=models.SET_NULL,  null = True)
     room = models.ForeignKey("Room", on_delete=models.SET_NULL,  null = True)
     type_lessons = models.ForeignKey("TypeLesson", on_delete=models.SET_NULL,  null = True)
 
@@ -206,7 +210,7 @@ def subject_fill():
 
 
 
-print("==========-----------=============--------------=============--------")
+# print("==========-----------=============--------------=============--------")
 # faculty_fill()
 # print()
 # cathedra_fill()
@@ -226,44 +230,81 @@ print("==========-----------=============--------------=============--------")
 # group_info_fill()
 # print()
 # subject_fill()
-print("==========---------DONE--==DONE=====DONE-------========--------")
+# print("==========---------DONE--==DONE=====DONE-------========--------")
 
-number_arr = ["первый", "второй", "третий", "четвертый","пятый", "шестой", "седьмой", "восьмой"]
-name = "data/dekan_data/{}.csv"
-namelist = [
-"ввт",
-"вип",
-"вхт",
-"вэ",
-"вэм"
-]
 # group = Group_info()
+def get_caf_list(s):
+	l  = []
+	if "и" in s:
+		l.append(s.replace(" ",""))
+	else:
+		l.append(s)
+	return l
+
+def get_group_info(abbr, course, semester):
+	return Group_info.objects.filter(abbr = abbr, course = course, semester = semester).get()
+
+def get_lesson_by_name(name):
+	from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
+	try:
+		q = Lessons.objects.filter(name = name).get()
+		return(q)
+	except ObjectDoesNotExist:
+		return(False)
+	except  MultipleObjectsReturned:
+		return(False)
+
+
 # lessons = Lessons()
-f_dict = {}
-kurs = int()
-group_abbr = str()
-sem = int()
-for n in namelist:
-	file = open(name.format(n), 'r')
+def pars_lessons_file():
+	number_arr = ["первый", "второй", "третий", "четвертый","пятый", "шестой", "седьмой", "восьмой"]
+	name = "data/dekan_data/{}.csv"
+	namelist = [
+	"ввт",
+	"вип",
+	"вхт",
+	"вэ",
+	"вэм"
+	]
+	f_dict = {}
+	kurs = int()
+	group_abbr = str()
+	sem = int()
+	group_info = int()
+	for n in namelist:
+		file = open(name.format(n), 'r')
 
-	for line in file:
-		line = line.replace("\n","")
-		elem = line.split(";")
-		if elem[0].lower() == "курс":
-			ku = elem[1] 
-			l = elem[2].split(" ")
-			gr = l[len(l)-1].split("-")[0]
-			print(ku, gr)
-		if line.lower() in number_arr:
-			sem = number_arr.index(line.lower())+1
-			print(sem)
-		print
-		if elem[1].isdigit():
-			print(elem[3])
-			print()
-			caf = Cathedra.objects.filter(abbr = elem[3]).get()
-			lesson = Lesson(name = elem[2], cathedra = caf)
-			lessno.save()
+		for line in file:
+			line = line.replace("\n","")
+			elem = line.split(";")
 
-			# group_info = get_group_info(elem[])
-			
+			if elem[0].lower() == "курс":
+				ku = elem[1] 
+				l = elem[2].split(" ")
+				gr = l[len(l)-1].split("-")[0]
+				continue
+
+			if elem[0].lower() in number_arr:
+				sem = number_arr.index(line.lower())+1
+				sem = 1 if sem % 2 != 0 else 2
+				group_info = get_group_info(abbr = gr, course = ku, semester = sem)
+				continue
+
+			if elem[0] == "" and len(elem) == 1:
+				continue
+
+			if elem[1].isdigit():
+				
+				caf_lis = get_caf_list(elem[3])
+				for n in caf_lis:
+					caf = Cathedra.objects.filter(abbr = n).get()
+					lesson = get_lesson_by_name(elem[2])
+					if not(lesson):
+						lesson = Lessons(name = elem[2], cathedra = caf)
+					lesson.save()
+					lfg = Lessons_for_group(group_info = group_info, lesson = lesson)
+					lfg.save()
+			print(gr, ku, sem, "||||DONE|||||")
+
+if len(Lessons.objects.filter()) == 0:
+	pars_lessons_file()

@@ -1,5 +1,5 @@
 from django.shortcuts import render,redirect
-from django.http import HttpResponse
+
 from django.views.generic import View
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.csrf import ensure_csrf_cookie
@@ -7,12 +7,11 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.http import require_http_methods
 from django.contrib.auth.decorators import login_required
 from vpitt.dbfunc import get_user, get_user_profile, \
-                        get_faculty, get_groups_info, \
+                        get_faculty, get_list_groups_info, \
                         create_profile, create_group, \
                         set_timetable_to_db, get_lessons, \
-                        get_lesson_by_name, get_teacher_by_caf, \
-                        get_korpus_by_name, get_rooms_by_korpus, \
-                        get_korpus, get_groups_name
+                        get_korpus, get_groups_name, get_users_schedules,\
+                        get_group_by_id
 import json
 from ast import literal_eval
 # Create your views here.
@@ -26,105 +25,75 @@ from ast import literal_eval
 def base_view(request):
     return render(request, "welcome.html")
 
+@login_required
+@require_http_methods(["GET"])
+def schedule_list_view(request):
+    schedule_list = get_users_schedules(request.user)
+    context = {"schedules":schedule_list}
+    return render(request, "timetable/schedules_list.html", context)
 
 @login_required
 @require_http_methods(["GET"])
-def fill_profile(request):
-    user_profile = get_user_profile(request.user)
-    if user_profile:
-        return redirect("/timetable/")
-    faculty = get_faculty()
-    groups = get_groups_info()
-    c = {"faculty":faculty, "groups":groups}
-    return render(request, "timetable/profile.html", c)
+def add_new_schedules(request):
+    groups = get_list_groups_info()
+    c = {"groups":groups}
+    return render(request, "timetable/add_new_sch.html", c)
 
 @login_required
 @require_http_methods(["POST"])
-def fill_profile_post(request):
-    user_profile = get_user_profile(request.user)
-    if not(user_profile):
-        group = create_group(request.POST["name-kurs"], request.POST["name-group"], request.POST["name-subgroup"])
-        create_profile(get_user(request), group)
-    print("==========", request.POST["name-kurs"])
-    return redirect("/timetable/")
+def add_new_schedules_post(request):
+    print()
+    print(request.POST["name-group"])
+    print(request.POST["name-kurs"])
+    print(request.POST["name-semester"])
+    print(request.POST["name-subgroup"])
+    group = create_group(request.POST["name-group"], 
+                         request.POST["name-kurs"], 
+                         request.POST["name-semester"],
+                         request.POST["name-subgroup"],
+                         request.user)
+    print( group)
+    if group:
+        return redirect("/schedule_list/")
+    return redirect("/add-new-schedules")
+    
 
 @login_required
 @require_http_methods(["GET"])
-def table_view(request):
+def edit_schedule(request, group_id):
     method_decorator(csrf_protect)
-    user_profile = get_user_profile(request.user)
-    if not(user_profile):
-        return redirect("/fill_profile")
+    group = get_group_by_id(group_id)
+    if group and (group.user_create == request.user):
+        context = {"tt_json": "", "lessons": generate_lessons_list(group), "korpus": generate_korpus_list(), "group" : group}
 
-    lessons = get_lessons()
+        if group.tt_json:
+            context["tt_json"] = group.tt_json
+
+        return render(request, "timetable/timediv.html", context)
+
+
+@login_required
+@require_http_methods(["GET"])
+def timetable_done(request, group_id):
+    set_timetable_to_db(group_id)
+    return render(request, "timetable/timetable_done.html")
+
+
+
+
+
+def generate_lessons_list(group):
+    lessons = get_lessons(group)
     lesson_list = {0:"Выберете предмет"}
     for item in enumerate(lessons):
-        lesson_list[item[0]+1] = item[1].name
+        lesson_list[item[0]+1] = item[1].lesson.name
     lesson_list = json.dumps(lesson_list, ensure_ascii=False)
+    return lesson_list
 
+def generate_korpus_list():
     korpus = get_korpus()
     korpus_list = {0:""}
     for item in enumerate(korpus):
         korpus_list[item[0]+1] = item[1].letter
     korpus_list = json.dumps(korpus_list, ensure_ascii=False)
-
-    group_name = get_groups_name(request.user)
-
-    context = {"tt_json": "", "lessons": lesson_list, "korpus": korpus_list, "group_name" : group_name}
-    
-    if user_profile.tt_json:
-        context["tt_json"] = user_profile.tt_json
-
-    return render(request, "timetable/timediv.html", context)
-
-
-@login_required
-@require_http_methods(["POST"])
-def post(request):
-    var = literal_eval(list(request.POST.keys())[0])
-    json_from_user = var["0"]
-    user_profile = get_user_profile(request.user)
-    user_profile.tt_json = json_from_user
-    user_profile.save()
-    print(json_from_user["second"])
-    return HttpResponse(200)
-
-@login_required
-@require_http_methods(["GET"])
-def timetable_done(request):
-    user_profile = get_user_profile(request.user)
-    set_timetable_to_db(user_profile)
-    return render(request, "timetable/timetable_done.html")
-
-@login_required
-@require_http_methods(["POST"])
-def get_teacher(request):
-    name = request.POST["name"]
-    lesson = get_lesson_by_name(name)
-    teachers = get_teacher_by_caf(lesson.cathedra)
-    teachers_dict = {0:"Выберете преподавателя"}
-    for item in enumerate(teachers):
-        s = (item[1].last_name) + " " + item[1].first_name[:1] + ". " + item[1].patronymic[:1] + "."
-        teachers_dict[item[0]+1] = s
-    teachers_dict = json.dumps(teachers_dict, ensure_ascii=False)
-
-    # var = literal_eval(list(request.POST.keys()))
-    # json_from_user = var    
-    print("=====================", lesson.cathedra)
-    return HttpResponse(teachers_dict)
-
-@login_required
-@require_http_methods(["POST"])
-def get_room(request):
-    name = request.POST["name"]
-    print("=",name,"=")
-    korpus = get_korpus_by_name(name)
-    print(korpus)
-    rooms = get_rooms_by_korpus(korpus)
-    print(rooms)
-    rooms_dict = {0:""}
-    for item in enumerate(rooms):
-        s = (item[1].number)
-        rooms_dict[item[0]+1] = s
-    rooms_dict = json.dumps(rooms_dict, ensure_ascii=False)
-    return HttpResponse(rooms_dict)
+    return korpus_list

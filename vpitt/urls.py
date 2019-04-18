@@ -16,17 +16,22 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from timetable import views as tt_views
+from timetable import ajax_request 
 urlpatterns = [
     path('admin/', admin.site.urls),
 
-    path('get_room',  tt_views.get_room),
-    path('get_teacher',  tt_views.get_teacher),
-    path('timetable/done',  tt_views.timetable_done),
-    path('fill_profile/post/',  tt_views.fill_profile_post),
-    path('fill_profile/',  tt_views.fill_profile),
-    path('timetable/', tt_views.table_view),
+    path('edit-schedule/<int:group_id>/', tt_views.edit_schedule),
+    path('schedule_list/', tt_views.schedule_list_view),
+    path('timetable/done/<int:group_id>/',  tt_views.timetable_done),
+    path('add-new-schedules/post/',  tt_views.add_new_schedules_post),
+    path('add-new-schedules/',  tt_views.add_new_schedules),
+    # path('timetable/', tt_views.table_view),
     path('', tt_views.base_view),
-    path("save_changes", tt_views.post),
+
+    path("save_changes", ajax_request.save_changes),
+    path('get_room',  ajax_request.get_room),
+    path('get_teacher',  ajax_request.get_teacher),
+
     path('accounts/', include('accounts.urls')),
     path('accounts/', include('django.contrib.auth.urls')),
 ]
